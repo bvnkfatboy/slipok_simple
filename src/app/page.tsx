@@ -1,11 +1,12 @@
 'use client';
 
-import axios from 'axios';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
 import MainLayout from '@/components/layout/main';
 import { Input } from '@/components/ui/input';
+
+import { postSlipOK } from '@/lib/action';
 
 export default function Home() {
   const [slipOKData, setSlipOKData] = useState([]);
@@ -16,27 +17,38 @@ export default function Home() {
     setFiles(e.target.files[0]);
   };
 
+  // console.log("Select files: ", files);
+
   const handleFileUpload = async (e: any) => {
+    // setIsLoading(true);
+    // const response = await postSlipOK(file);
+    // setSlipOKData(response.data);
+    // setIsLoading(false);
+    // console.log(response.data);
+
     e.preventDefault();
 
     const formData = new FormData();
     formData.append('files', files);
 
     try {
-      const res = await axios.post('https://api.slipok.com/api/line/apikey/22150', formData, {
+      const res = await fetch('https://api.slipok.com/api/line/apikey/22150', {
+        method: 'POST',
         headers: {
           'x-authorization': 'SLIPOK39PWP7N',
-          'Access-Control-Allow-Headers': 'x-authorization',
+          'Content-Type': 'multipart/form-data',
         },
+        body: formData,
       });
 
-      if (res.status === 200) {
+      if (res.ok) {
         console.log('Request successful');
       } else {
         throw new Error('Failed to send a request');
       }
 
-      const data = res.data;
+      const data = await res.json();
+      // setSlipOkData(data.data);
       console.log('Slipok data: ', data);
     } catch (error) {
       console.log('Error during fetching data: ', error);
@@ -59,7 +71,6 @@ export default function Home() {
             {files && (
               <div className="flex  w-full items-center justify-center rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
                 <Image
-                  //@ts-ignore
                   src={URL.createObjectURL(files)}
                   alt="Preview"
                   className="m-6 rounded-lg"
@@ -70,7 +81,7 @@ export default function Home() {
               </div>
             )}
             <form className="grid w-full max-w-sm items-center gap-1.5" onSubmit={handleFileUpload}>
-              <Input className="" type="file" onChange={handleFile} />
+              <Input className="" type="file" onChange={handleFile} accept="image/*" />
               <button
                 className="flex items-center justify-center rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-300"
                 type="submit"
