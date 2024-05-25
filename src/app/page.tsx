@@ -1,57 +1,52 @@
 'use client';
 
+import axios from 'axios';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
 import MainLayout from '@/components/layout/main';
 import { Input } from '@/components/ui/input';
 
-import { postSlipOK } from '@/lib/action';
-
 export default function Home() {
   const [slipOKData, setSlipOKData] = useState([]);
-  const [files, setFiles] = useState('');
+  const [file, setFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleFile = (e: any) => {
-    setFiles(e.target.files[0]);
+    setFile(e.target.files[0]);
   };
 
-  // console.log("Select files: ", files);
-
   const handleFileUpload = async (e: any) => {
-    // setIsLoading(true);
-    // const response = await postSlipOK(file);
-    // setSlipOKData(response.data);
-    // setIsLoading(false);
-    // console.log(response.data);
-
     e.preventDefault();
 
+    if (!file) {
+      console.log('No file selected');
+      return;
+    }
+
     const formData = new FormData();
-    formData.append('files', files);
+    formData.append('file', file);
+
+    setIsLoading(true);
 
     try {
-      const res = await fetch('https://api.slipok.com/api/line/apikey/22150', {
-        method: 'POST',
+      const res = await axios.post('https://api.slipok.com/api/line/apikey/22150', formData, {
         headers: {
           'x-authorization': 'SLIPOK39PWP7N',
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': 'multipart/form-data', // Optional, Axios will set it automatically
         },
-        body: formData,
       });
 
-      if (res.ok) {
-        console.log('Request successful');
+      if (res.status === 200) {
+        setSlipOKData(res.data.data);
+        console.log('Slipok data: ', res.data);
       } else {
         throw new Error('Failed to send a request');
       }
-
-      const data = await res.json();
-      // setSlipOkData(data.data);
-      console.log('Slipok data: ', data);
     } catch (error) {
       console.log('Error during fetching data: ', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -68,11 +63,11 @@ export default function Home() {
               <p className="text-gray-500 dark:text-gray-400"></p>
             </div>
 
-            {files && (
+            {file && (
               <div className="flex  w-full items-center justify-center rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
                 <Image
                   //@ts-ignore
-                  src={URL.createObjectURL(files)}
+                  src={URL.createObjectURL(file)}
                   alt="Preview"
                   className="m-6 rounded-lg"
                   width={300}
@@ -86,7 +81,7 @@ export default function Home() {
               <button
                 className="flex items-center justify-center rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-300"
                 type="submit"
-                disabled={isLoading || !files}
+                disabled={isLoading || !file}
               >
                 {isLoading ? (
                   <svg
