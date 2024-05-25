@@ -71,6 +71,7 @@ export default function Home() {
             {files && (
               <div className="flex  w-full items-center justify-center rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
                 <Image
+                  //@ts-ignore
                   src={URL.createObjectURL(files)}
                   alt="Preview"
                   className="m-6 rounded-lg"
