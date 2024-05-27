@@ -8,7 +8,14 @@ import MainLayout from '@/components/layout/main';
 import { Input } from '@/components/ui/input';
 
 export default function Home() {
-  const [slipOKData, setSlipOKData] = useState([]);
+  const [slipOKData, setSlipOKData] = useState<{
+    amount?: number;
+    senderBankName?: string;
+    senderAccountName?: string;
+    receiverBankName?: string;
+    receiverAccountName?: string;
+    date?: string;
+  }>({});
   const [file, setFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -26,20 +33,24 @@ export default function Home() {
 
     const formData = new FormData();
     formData.append('file', file);
-
-    setIsLoading(true);
-
+    const headers = {
+      Authorization: 'Bearer ' + process.env.SLIPOK_API_KEY,
+    };
     try {
-      const res = await axios.post('https://api.slipok.com/api/line/apikey/22150', formData, {
-        headers: {
-          'x-authorization': 'SLIPOK39PWP7N',
-          'Content-Type': 'multipart/form-data', // Optional, Axios will set it automatically
-        },
+      const res = await axios.post('https://developer.easyslip.com/api/v1/verify', formData, {
+        headers,
       });
 
       if (res.status === 200) {
-        setSlipOKData(res.data.data);
-        console.log('Slipok data: ', res.data);
+        setSlipOKData({
+          amount: res.data.data.amount.amount,
+          senderBankName: res.data.data.sender.bank.name,
+          senderAccountName: res.data.data.sender.account.name.th,
+          receiverBankName: res.data.data.receiver.bank.name,
+          receiverAccountName: res.data.data.receiver.account.name.th,
+          date: new Date(res.data.data.date).toLocaleDateString(),
+        });
+        // console.log('Slipok data: ', res.data.data);
       } else {
         throw new Error('Failed to send a request');
       }
@@ -57,7 +68,7 @@ export default function Home() {
           <h1 className="text-center text-3xl font-bold">เช็คสลิปออนไลน์</h1>
         </header>
         <div className="grid gap-6 md:grid-cols-2">
-          <div className="flex flex-col items-center justify-center space-y-4 rounded-lg bg-gray-100 p-6 dark:bg-gray-800">
+          <div className="checker flex flex-col items-center justify-center space-y-4 rounded-lg bg-gray-100 p-6">
             <div className="space-y-2 text-center">
               <h2 className="text-2xl font-bold">อัพโหลดไฟล์ภาพ</h2>
               <p className="text-gray-500 dark:text-gray-400"></p>
@@ -103,43 +114,51 @@ export default function Home() {
               </button>
             </form>
           </div>
-          <div className="space-y-4 rounded-lg bg-gray-100 p-6 dark:bg-gray-800">
+
+          <div className="infomation space-y-4 rounded-lg bg-gray-100 p-6 dark:bg-gray-800">
             <div className="space-y-2">
               <h2 className="text-2xl font-bold">รายละเอียด</h2>
               <p className="text-gray-500 dark:text-gray-400"></p>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              {slipOKData.map((data: any, index) => (
-                <div key={index} className="space-y-1">
-                  <p className="text-sm font-medium">{data.name}</p>
-                  <p className="text-gray-500 dark:text-gray-400">{data.value}</p>
-                </div>
-              ))}
+              <div className="space-y-1">
+                <p className="text-sm font-medium">จำนวนเงิน</p>
+                <p className="text-gray-500 dark:text-gray-400">
+                  {slipOKData.amount ? slipOKData.amount + ' บาท' : '-'}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium">วันที่</p>
+                <p className="text-gray-500 dark:text-gray-400">{slipOKData.date ? slipOKData.date : '-'}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium">บัญชีผู้ส่ง</p>
+                <p className="text-gray-500 dark:text-gray-400">
+                  {slipOKData.senderBankName ? slipOKData.senderBankName : '-'}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium">ชื่อบัญชีผู้ส่ง</p>
+                <p className="text-gray-500 dark:text-gray-400">
+                  {slipOKData.senderAccountName ? slipOKData.senderAccountName : '-'}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium">บัญชีผู้รับ</p>
+                <p className="text-gray-500 dark:text-gray-400">
+                  {slipOKData.receiverBankName ? slipOKData.receiverBankName : '-'}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium">ชื่อบัญชีผู้รับ</p>
+                <p className="text-gray-500 dark:text-gray-400">
+                  {slipOKData.receiverAccountName ? slipOKData.receiverAccountName : '-'}
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </MainLayout>
-  );
-}
-
-function CloudUploadIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
-      <path d="M12 12v9" />
-      <path d="m16 16-4-4-4 4" />
-    </svg>
   );
 }
