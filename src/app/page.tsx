@@ -34,7 +34,7 @@ export default function Home() {
     const formData = new FormData();
     formData.append('file', file);
     const headers = {
-      Authorization: 'Bearer ' + process.env.NEXT_PUBLIC_SLIPOK_API_KEY,
+      Authorization: 'Bearer ' + process.env.NEXT_PUBLIC_API,
     };
     try {
       const res = await axios.post('https://developer.easyslip.com/api/v1/verify', formData, {
